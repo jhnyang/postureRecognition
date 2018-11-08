@@ -194,7 +194,7 @@ namespace WpfTest
             this.DisplayCr(); //화면에 출력해주는 함수
             GetBodyPoint(); //body 좌표를 추출하는 함수 
 
-            if (SitBtn.IsPressed)
+            if (SitBtn.IsPressed || StandBtn.IsPressed)
                 DrawingBody(savedPen, savedPen);
             else
                 DrawingBody(pointPen, bonesPen);

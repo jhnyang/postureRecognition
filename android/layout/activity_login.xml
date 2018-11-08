@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    tools:context=".LoginActivity">
+
+
+    <ImageView
+        android:layout_marginTop="25dp"
+        android:layout_width="223dp"
+        android:layout_height="211dp"
+        android:src="@drawable/bubulo" />
+
+
+
+    <android.support.design.widget.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <EditText
+            android:id="@+id/loginActivity_edittext_id"
+            android:layout_width="177dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:hint="ID" />
+
+    </android.support.design.widget.TextInputLayout>
+
+    <android.support.design.widget.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <EditText
+            android:id="@+id/loginActivity_edittext_password"
+            android:layout_width="148dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:hint="PASSWORD"
+            android:inputType="textPassword" />
+
+    </android.support.design.widget.TextInputLayout>
+
+
+    <Button
+        android:id="@+id/loginActivity_button_login"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="LOGIN" />
+
+    <Button
+        android:id="@+id/loginActivity_button_signup"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="5dp"
+        android:text="SIGN UP" />
+
+</LinearLayout>

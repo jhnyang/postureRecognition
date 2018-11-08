@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background"
+    android:gravity="center"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+   <LinearLayout
+       android:layout_marginTop="40dp"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:orientation="horizontal">
+       <TextView
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+           android:gravity="center"
+           android:textColor="#e6d4c5"
+           android:textSize="20dp"
+           android:text=" 수면분석 " />
+       <TextView
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+           android:gravity="center"
+           android:textColor="#e6d4c5"
+           android:textSize="25dp"
+           android:text=" 4시간 27분 " />
+   </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="#e6d4c5"
+            android:textSize="20dp"
+            android:text=" 활동에너지 " />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="#e6d4c5"
+            android:textSize="40dp"
+            android:text=" 8.7 kcal " />
+    </LinearLayout>
+
+
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="#e6d4c5"
+            android:textSize="20dp"
+            android:text=" 혈압수치 " />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="#e6d4c5"
+            android:textSize="30dp"
+            android:text=" 정상 " />
+    </LinearLayout>
+
+
+    <ImageView
+        android:id="@+id/image"
+        android:layout_width="301dp"
+        android:layout_height="379dp"
+        android:layout_marginBottom="20dp"
+        android:layout_marginTop="20dp"
+        android:src="@drawable/grandfa1" />
+
+
+
+    <Button
+        android:layout_marginTop="18dp"
+        android:layout_marginBottom="25dp"
+        android:id="@+id/refreshbutton"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:background="@drawable/rotate"/>
+
+</LinearLayout>

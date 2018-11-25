@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Net;
+using System.Net.Sockets;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,8 +14,6 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Microsoft.Kinect;
 using System.Data;
 using MySql.Data;
@@ -69,7 +68,7 @@ namespace WpfTest
         /// <summary>
         /// 데이터 베이스 관련 변수 elder 
         /// </summary>
-        string connectionStr = "SERVER=127.0.0.1; PORT =3306; DATABASE =elder; UID =root; pwd=****; SslMode=none";
+        string connectionStr = "SERVER=127.0.0.1; PORT =3306; DATABASE =elder; UID =root; pwd=*****; SslMode=none";
         string sql_checkTable = "SELECT count(*) FROM Information_schema.tables WHERE table_name = @tname AND table_schema = 'elder'";
 
 
@@ -79,6 +78,7 @@ namespace WpfTest
         /// </summary>
         bool bodydatareceived = false;
         bool isFrameReady = false;
+
         /// <summary>
         /// 데이터 저장을 위한 변수 
         /// </summary>
@@ -93,6 +93,15 @@ namespace WpfTest
         string statusInfo = null;
         string tempPointStr = null;
         string allJointPoints = null;
+        string signal = null;
+
+        /// <summary>
+        /// 소켓 통신을 위한 변수
+        /// </summary>
+        private Socket m_ServerSocket;
+        private List<Socket> m_ClientSocket;
+        private byte[] szData;
+
 
         protected void OnPropertyChanged(string propertyName)
         {
@@ -175,9 +184,11 @@ namespace WpfTest
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            SignalListening();
             msfr = kinectSensor.OpenMultiSourceFrameReader(FrameSourceTypes.Color | FrameSourceTypes.Depth | FrameSourceTypes.Body);
             if (msfr != null)
             {
+
                 msfr.MultiSourceFrameArrived += Msfr_MultiSourceFrameArrived;
                 StatusInfo = "FrameReader";
             }
@@ -187,6 +198,84 @@ namespace WpfTest
             }
 
         }
+        private void SignalListening()
+        {
+            //소캣 설정하고 기다리기 
+            Signal = "신호 기다리는 중";
+            m_ClientSocket = new List<Socket>(); //혹시 모르니까 여러 클라이언트에서 받을 거 대비
+
+            m_ServerSocket = new Socket(
+                                AddressFamily.InterNetwork,
+                                SocketType.Stream,
+                                ProtocolType.Tcp);
+            IPEndPoint ipep = new IPEndPoint(IPAddress.Any, 10000);
+
+            m_ServerSocket.Bind(ipep);
+            m_ServerSocket.Listen(20);
+            //받기용 -소켓처리를 지원(assist)하기 위한 클래스
+            SocketAsyncEventArgs args = new SocketAsyncEventArgs();
+            args.Completed
+                += new EventHandler<SocketAsyncEventArgs>(Accept_Completed);
+            m_ServerSocket.AcceptAsync(args);
+        }
+
+        private void Accept_Completed(object sender, SocketAsyncEventArgs e)
+        {
+             Socket clientSocket = e.AcceptSocket;
+            //접속한 클라이언수 보이기
+            Signal = "클라이언트 수 " + m_ClientSocket.Count.ToString();
+
+            if(clientSocket != null)
+            {
+                SocketAsyncEventArgs args = new SocketAsyncEventArgs();
+                //Recieve 이벤트는 클라이언트로 부터 Send 전문이 날라오면 호출 되는 이벤트.
+                szData = new byte[1024];
+                //기본 버퍼 세팅 
+                args.SetBuffer(szData, 0, 1024);
+                args.UserToken = clientSocket;
+                args.Completed
+                    += new EventHandler<SocketAsyncEventArgs>(Receive_Completed);
+                clientSocket.ReceiveAsync(args);
+
+            }
+        }
+
+        private void Receive_Completed(object sender, SocketAsyncEventArgs e)
+        {
+            Socket ClientSocket = (Socket)sender;
+            if (ClientSocket.Connected && e.BytesTransferred > 0)
+            {
+                byte[] szData = e.Buffer;    // 데이터 수신 e.buffer로 저쪽에서 데이터를 가져옴 
+                Signal = Encoding.Unicode.GetString(szData);
+
+
+                //다시 0으로 초기화
+                for (int i = 0; i < szData.Length; i++)
+                {
+                    szData[i] = 0;
+                }
+                e.SetBuffer(szData, 0, 1024);
+
+                ClientSocket.ReceiveAsync(e);
+                disConnect();
+            }
+            else
+            {
+                ClientSocket.Disconnect(false);
+                ClientSocket.Dispose();
+                m_ClientSocket.Remove(ClientSocket);
+            }
+        }
+        private void disConnect()
+        {
+            foreach (Socket pBuffer in m_ClientSocket)
+            {
+                if (pBuffer.Connected)
+                    pBuffer.Disconnect(false);
+                pBuffer.Dispose();
+            }
+            m_ServerSocket.Dispose();
+        }
         private void Msfr_MultiSourceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
         {
             msf = e.FrameReference.AcquireFrame();
@@ -194,7 +283,7 @@ namespace WpfTest
             this.DisplayCr(); //화면에 출력해주는 함수
             GetBodyPoint(); //body 좌표를 추출하는 함수 
 
-            if (SitBtn.IsPressed || StandBtn.IsPressed)
+            if (SitBtn.IsPressed || StandBtn.IsPressed || LyingBtn.IsPressed)
                 DrawingBody(savedPen, savedPen);
             else
                 DrawingBody(pointPen, bonesPen);
@@ -378,6 +467,21 @@ namespace WpfTest
                 }
             }
         }
+        public string Signal
+        {
+            get
+            {
+                return this.signal;
+            }
+            set
+            {
+                if (this.signal != value)
+                {
+                    this.signal = value;
+                    OnPropertyChanged("Signal");
+                }
+            }
+        }
         public string AllJointPoints
         {
             get
@@ -553,6 +657,23 @@ namespace WpfTest
             else
             {
                 CreateTable("standdb");
+            }
+        }
+
+        private void LyingBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (JointCameraPoints.Count == 0)
+            {
+                MessageBox.Show("사람을 인식한 후에 저장을 눌러주세요");
+                return;
+            }
+            if (IsTableExist("lyingdb"))
+            {
+                InsertValues("lyingdb");
+            }
+            else
+            {
+                CreateTable("lyingdb");
             }
         }
     }

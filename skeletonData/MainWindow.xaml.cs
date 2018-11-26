@@ -72,7 +72,6 @@ namespace WpfTest
         string sql_checkTable = "SELECT count(*) FROM Information_schema.tables WHERE table_name = @tname AND table_schema = 'elder'";
 
 
-
         /// <summary>
         /// 단순 체크를 위한 변수 
         /// </summary>
@@ -135,7 +134,6 @@ namespace WpfTest
             this.imageSource = new DrawingImage(this.drawingGroup);
 
             this.DataContext = this;
-
             InitializeComponent();
         }
         private void ReadersReady()
@@ -188,7 +186,6 @@ namespace WpfTest
             msfr = kinectSensor.OpenMultiSourceFrameReader(FrameSourceTypes.Color | FrameSourceTypes.Depth | FrameSourceTypes.Body);
             if (msfr != null)
             {
-
                 msfr.MultiSourceFrameArrived += Msfr_MultiSourceFrameArrived;
                 StatusInfo = "FrameReader";
             }
@@ -237,7 +234,6 @@ namespace WpfTest
                 ReceiveArgs.Completed
                     += new EventHandler<SocketAsyncEventArgs>(Receive_Completed);
                 clientSocket.ReceiveAsync(ReceiveArgs);
-
             }
         }
 
@@ -249,7 +245,7 @@ namespace WpfTest
                 byte[] szData = e.Buffer;    // 데이터 수신 e.buffer로 저쪽에서 데이터를 가져옴 
                 Signal = Encoding.Unicode.GetString(szData);
 
-
+               
                 //다시 0으로 초기화
                 for (int i = 0; i < szData.Length; i++)
                 {
@@ -260,11 +256,13 @@ namespace WpfTest
                 ClientSocket.ReceiveAsync(e);
 
                 SocketAsyncEventArgs sendArgs = new SocketAsyncEventArgs(); //보내기를 위함 
-
-                byte[] buffer = Encoding.Unicode.GetBytes("server sends msg");
+                String dataForSend = "111";
+                szData = Encoding.Unicode.GetBytes(dataForSend);
                 sendArgs.SetBuffer(szData, 0, szData.Length);
-                sendArgs.UserToken = ClientSocket;
+                byte[] sendByte= Encoding.UTF8.GetBytes(dataForSend);
+                ClientSocket.Send(sendByte);
                 ClientSocket.SendAsync(sendArgs);
+
                 disConnect();
             }
             else
@@ -368,7 +366,6 @@ namespace WpfTest
                         position.Z = 0.1f;
                     }
 
-
                     //2d mapping
                     ColorSpacePoint colorSpacePoint = kinectSensor.CoordinateMapper.MapCameraPointToColorSpace(position);
                     this.joint2DPoints[jointType] = new Point(colorSpacePoint.X, colorSpacePoint.Y);
@@ -437,7 +434,6 @@ namespace WpfTest
 
                     // prevent drawing outside of our render area
                     this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, (int)colorBitmap.Width, this.colorBitmap.Height));
-
                 }
             }
            

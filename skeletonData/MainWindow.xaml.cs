@@ -222,20 +222,21 @@ namespace WpfTest
         private void Accept_Completed(object sender, SocketAsyncEventArgs e)
         {
              Socket clientSocket = e.AcceptSocket;
+            
             //접속한 클라이언수 보이기
             Signal = "클라이언트 수 " + m_ClientSocket.Count.ToString();
 
             if(clientSocket != null)
             {
-                SocketAsyncEventArgs args = new SocketAsyncEventArgs();
+                SocketAsyncEventArgs ReceiveArgs = new SocketAsyncEventArgs();
                 //Recieve 이벤트는 클라이언트로 부터 Send 전문이 날라오면 호출 되는 이벤트.
                 szData = new byte[1024];
                 //기본 버퍼 세팅 
-                args.SetBuffer(szData, 0, 1024);
-                args.UserToken = clientSocket;
-                args.Completed
+                ReceiveArgs.SetBuffer(szData, 0, 1024);
+                ReceiveArgs.UserToken = clientSocket;
+                ReceiveArgs.Completed
                     += new EventHandler<SocketAsyncEventArgs>(Receive_Completed);
-                clientSocket.ReceiveAsync(args);
+                clientSocket.ReceiveAsync(ReceiveArgs);
 
             }
         }
@@ -257,6 +258,13 @@ namespace WpfTest
                 e.SetBuffer(szData, 0, 1024);
 
                 ClientSocket.ReceiveAsync(e);
+
+                SocketAsyncEventArgs sendArgs = new SocketAsyncEventArgs(); //보내기를 위함 
+
+                byte[] buffer = Encoding.Unicode.GetBytes("server sends msg");
+                sendArgs.SetBuffer(szData, 0, szData.Length);
+                sendArgs.UserToken = ClientSocket;
+                ClientSocket.SendAsync(sendArgs);
                 disConnect();
             }
             else
@@ -266,6 +274,7 @@ namespace WpfTest
                 m_ClientSocket.Remove(ClientSocket);
             }
         }
+
         private void disConnect()
         {
             foreach (Socket pBuffer in m_ClientSocket)

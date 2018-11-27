@@ -18,6 +18,7 @@ using Microsoft.Kinect;
 using System.Data;
 using MySql.Data;
 using MySql.Data.MySqlClient;
+using System.Threading;
 
 
 //개발자 : 양지현
@@ -98,8 +99,10 @@ namespace WpfTest
         /// 소켓 통신을 위한 변수
         /// </summary>
         private Socket m_ServerSocket;
-        private List<Socket> m_ClientSocket;
+        private List<Socket> m_ClientSocket= new List<Socket>();
         private byte[] szData;
+        Thread socketsupervisor;
+        bool isClose = false;
 
 
         protected void OnPropertyChanged(string propertyName)
@@ -135,6 +138,11 @@ namespace WpfTest
 
             this.DataContext = this;
             InitializeComponent();
+
+            //for socket check
+            socketsupervisor = new Thread(SocketSupervisor);
+            socketsupervisor.IsBackground = true;
+            socketsupervisor.Start();
         }
         private void ReadersReady()
         {
@@ -195,11 +203,50 @@ namespace WpfTest
             }
 
         }
+        public void SocketSupervisor()
+        {
+            while (true)
+            {
+
+                try
+                {
+                    if (!isClose)
+                    {
+                        if (m_ClientSocket.Count > 0)
+                        {
+
+                            for (int i = 0; i < m_ClientSocket.Count; i++)
+                            {
+                                if (!SocketConnected(m_ClientSocket[i]))
+                                {
+                                    m_ClientSocket.RemoveAt(i);
+                                }
+                            }
+                        }
+                        Thread.Sleep(200);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, ex.Source);
+                }
+            }
+        }
+
+        private bool SocketConnected(Socket s)
+        {
+            bool part1 = s.Poll(1000, SelectMode.SelectRead);
+            bool part2 = (s.Available == 0);
+            if (part1 & part2)
+            {//connection is closed
+                return false;
+            }
+            return true;
+        }
         private void SignalListening()
         {
             //소캣 설정하고 기다리기 
             Signal = "신호 기다리는 중 \n";
-            m_ClientSocket = new List<Socket>(); //혹시 모르니까 여러 클라이언트에서 받을 거 대비
 
             m_ServerSocket = new Socket(
                                 AddressFamily.InterNetwork,
@@ -219,11 +266,11 @@ namespace WpfTest
         private void Accept_Completed(object sender, SocketAsyncEventArgs e)
         {
              Socket clientSocket = e.AcceptSocket;
-            
+             m_ClientSocket.Add(clientSocket);
             //접속한 클라이언수 보이기
-            Signal += "클라이언트 수 " + m_ClientSocket.Count.ToString()+"\n";
+            Signal += "클라이언트 수 " + m_ClientSocket.Count.ToString() + "\n";
 
-            if(clientSocket != null)
+            if (clientSocket != null)
             {
                 SocketAsyncEventArgs ReceiveArgs = new SocketAsyncEventArgs();
                 //Recieve 이벤트는 클라이언트로 부터 Send 전문이 날라오면 호출 되는 이벤트.
@@ -235,6 +282,9 @@ namespace WpfTest
                     += new EventHandler<SocketAsyncEventArgs>(Receive_Completed);
                 clientSocket.ReceiveAsync(ReceiveArgs);
             }
+            //추가
+            e.AcceptSocket = null;
+            m_ServerSocket.AcceptAsync(e);
         }
 
         private void Receive_Completed(object sender, SocketAsyncEventArgs e)
@@ -256,13 +306,13 @@ namespace WpfTest
 
                 ClientSocket.ReceiveAsync(e);
                 String dataForSend = null;
-                if(JointCameraPoints.Values != null)
+                if (JointCameraPoints.Values != null)
                 {
                     foreach (CameraSpacePoint point3d in JointCameraPoints.Values)
                     {
                         dataForSend += point3d.X.ToString() + " " + point3d.Y.ToString() + " " + point3d.Z.ToString() + " ";
                     }
-                    Signal += "\n보내는 데이터 정보: " + dataForSend +"\n";
+                    Signal += "\n보내는 데이터 정보: " + dataForSend + "\n";
 
                     SocketAsyncEventArgs sendArgs = new SocketAsyncEventArgs(); //보내기를 위함 
 
@@ -272,12 +322,8 @@ namespace WpfTest
                     byte[] sendByte = Encoding.UTF8.GetBytes(dataForSend);
                     ClientSocket.Send(sendByte);
                     ClientSocket.SendAsync(sendArgs);
-                    disConnect();
                 }
-                else
-                {
-                    disConnect();
-                }
+                
             }
             else
             {
@@ -470,6 +516,12 @@ namespace WpfTest
                 kinectSensor = null;
             }
 
+            for (int i = 0; i < m_ClientSocket.Count; i++)
+            {
+                m_ClientSocket[i].Shutdown(SocketShutdown.Both);
+                m_ClientSocket[i].Close();
+            }
+            m_ClientSocket.Clear();
         }
         public string StatusInfo
         {
@@ -528,7 +580,6 @@ namespace WpfTest
                 return this.colorBitmap;
             }
         }
-
         string CreateTableQuery(string tablename)
         {
             string sql = "create table " + tablename + " (";

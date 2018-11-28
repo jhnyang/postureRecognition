@@ -103,6 +103,7 @@ namespace WpfTest
         private byte[] szData;
         Thread socketsupervisor;
         bool isClose = false;
+        String dataForSend = null;
 
 
         protected void OnPropertyChanged(string propertyName)
@@ -274,9 +275,9 @@ namespace WpfTest
             {
                 SocketAsyncEventArgs ReceiveArgs = new SocketAsyncEventArgs();
                 //Recieve 이벤트는 클라이언트로 부터 Send 전문이 날라오면 호출 되는 이벤트.
-                szData = new byte[1520];
+                szData = new byte[800];
                 //기본 버퍼 세팅 
-                ReceiveArgs.SetBuffer(szData, 0, 1520);
+                ReceiveArgs.SetBuffer(szData, 0, 800);
                 ReceiveArgs.UserToken = clientSocket;
                 ReceiveArgs.Completed
                     += new EventHandler<SocketAsyncEventArgs>(Receive_Completed);
@@ -291,9 +292,10 @@ namespace WpfTest
         {
             Signal = null;
             Socket ClientSocket = (Socket)sender;
+           
             if (ClientSocket.Connected && e.BytesTransferred > 0)
             {
-                byte[] szData = e.Buffer;    // 데이터 수신 e.buffer로 저쪽에서 데이터를 가져옴 
+                szData = e.Buffer;    // 데이터 수신 e.buffer로 저쪽에서 데이터를 가져옴 
                 String sData = Encoding.UTF8.GetString(szData).Replace("\0", "").Trim(); //1024버퍼 인코딩 
                 Signal += "받은 정보: " + sData;
 
@@ -302,31 +304,56 @@ namespace WpfTest
                 {
                     szData[i] = 0;
                 }
-                e.SetBuffer(szData, 0, 1520);
+                e.SetBuffer(szData, 0, 800);
 
-                ClientSocket.ReceiveAsync(e);
-                String dataForSend = null;
-                if (JointCameraPoints.Values != null)
+                dataForSend = null;
+                if (me != null)
                 {
                     foreach (CameraSpacePoint point3d in JointCameraPoints.Values)
                     {
                         dataForSend += point3d.X.ToString() + " " + point3d.Y.ToString() + " " + point3d.Z.ToString() + " ";
                     }
                     Signal += "\n보내는 데이터 정보: " + dataForSend + "\n";
+                    szData = Encoding.ASCII.GetBytes(dataForSend);
+                    Signal += "데이터 크기" + szData.Length.ToString();
+                    foreach (Socket clientInfo in m_ClientSocket)
+                    {
+                        SocketAsyncEventArgs sendArgs = new SocketAsyncEventArgs();
+                        Signal += "반복문";
 
-                    SocketAsyncEventArgs sendArgs = new SocketAsyncEventArgs(); //보내기를 위함 
+                        sendArgs.SetBuffer(szData, 0, szData.Length);
 
-                    szData = Encoding.Unicode.GetBytes(dataForSend);
-                    Signal += "data 크기" + szData.Length.ToString();
-                    sendArgs.SetBuffer(szData, 0, szData.Length);
-                    byte[] sendByte = Encoding.UTF8.GetBytes(dataForSend);
-                    ClientSocket.Send(sendByte);
-                    ClientSocket.SendAsync(sendArgs);
+                            clientInfo.SendAsync(sendArgs);
+                        
+                    }
+
+            
                 }
-                
+                szData = null;
+                ClientSocket.ReceiveAsync(e);
             }
             else
             {
+                ClientSocket.Disconnect(false);
+                ClientSocket.Dispose();
+                m_ClientSocket.Remove(ClientSocket);
+            }
+        }
+       
+
+        private void Send_Completed(object sender, SocketAsyncEventArgs e)
+        {
+            
+            Socket ClientSocket = (Socket)sender;
+            if (ClientSocket.Connected && e.BytesTransferred > 0)
+            {
+                ClientSocket.Send(szData);
+                ClientSocket.SendAsync(e);
+                szData = null;
+            }
+            else
+            {
+                szData = null;
                 ClientSocket.Disconnect(false);
                 ClientSocket.Dispose();
                 m_ClientSocket.Remove(ClientSocket);
@@ -451,6 +478,7 @@ namespace WpfTest
             }
             else
             {
+                AllJointPoints = null;
                 isFrameReady = false;
             }
         }

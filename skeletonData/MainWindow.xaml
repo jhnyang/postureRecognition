@@ -6,45 +6,55 @@
         xmlns:local="clr-namespace:WpfTest"
         mc:Ignorable="d"
         Title="MainWindow" Height="600" Width="800" Loaded="Window_Loaded" Closing="Window_Closing" >
-   
-    <Grid>
+
+    <Grid HorizontalAlignment="Stretch" >
         <Grid.RowDefinitions>
-            <RowDefinition Height="49*"/>
-            <RowDefinition Height="521*"/>
+            <RowDefinition Height="92*"/>
+            <RowDefinition Height="479*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="545*"/>
             <ColumnDefinition Width="248*"/>
         </Grid.ColumnDefinitions>
 
-        
-        <Image  Grid.Row="0"  Grid.RowSpan="2" Grid.Column="0" Source="{Binding ColorSource}" Margin="0,0.667,0.333,-0.333" />
-        <Image Grid.Row="0" Grid.RowSpan="2"  Grid.Column="0" Source="{Binding ImageSource}" Margin="0,0.667,0.333,-0.333" />
 
-        <WrapPanel  Grid.RowSpan="2" Grid.Column="1"  >
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Margin="10,0,0,0" >
-                <TextBlock Margin="0,10" x:Name="txtInfo" Height="520" Grid.Column="1">
-                    <Run Text="Status Info: "/>
-                    <Run FontSize="20" Text="{Binding StatusInfo, UpdateSourceTrigger=PropertyChanged}"/>
-                    <LineBreak /> 
-                    <Run Text="통신 정보: " />
-                    <Run Text="{Binding Signal, UpdateSourceTrigger=PropertyChanged}"></Run>
-                    <LineBreak/>
-                    <Run Text="{Binding AllJointPoints, UpdateSourceTrigger=PropertyChanged}"/>
-                </TextBlock>
-            </ScrollViewer>
-        </WrapPanel>
-        <StackPanel  Grid.Column="0"  Grid.Row="0" Background="Ivory" Orientation="Horizontal" Margin="0,0,0.333,1.333">
-            <Label Width="100" HorizontalAlignment="Left">training set 추가하기</Label>
-            <Button Name="SitBtn" Content="Sit Posture" Height="30" 
+        <Image  Grid.Row="0"  Grid.RowSpan="2" Grid.Column="0" Source="{Binding ColorSource}" Margin="0,1,0.333,-0.333" />
+        <Image Grid.Row="0" Grid.RowSpan="2"  Grid.Column="0" Source="{Binding ImageSource}" Margin="0,1,0.333,-0.333" />
+
+
+        <StackPanel  Grid.Column="0"  Grid.Row="0"  Margin="0,0,0.333,1"  Background="#EEF5F9">
+            <Label HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="13" 
+                   HorizontalContentAlignment="center" Width="535">Training set 추가하기</Label>
+            <Border Background="GhostWhite" BorderBrush="Silver" BorderThickness="1" CornerRadius="8,8,3,3" Margin="10,0,10,0">
+                <DockPanel Margin="10">
+                    <Button Name="SitBtn" Content="Sit Posture" Height="30"
                 HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5 1" Padding="3 0" Click="SitBtn_Click"  />
-            <Button Name="StandBtn" Content="Stand Posture" Height="30" 
+                    <Button Name="StandBtn" Content="Stand Posture" Height="30" 
                 HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5 1" Padding="3 0" Click="StandBtn_Click"  />
-            <Button Name="LyingBtn" Content="lying Posture" Height="30" 
+                    <Button Name="LyingBtn" Content="lying Posture" Height="30" 
                 HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5 1" Padding="3 0" Click="LyingBtn_Click"  />
+                    <Button x:Name="addBtn" Content=" 행동 추가 " Height="30" 
+                HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5 1" Padding="3 0" />
+                </DockPanel>
+            </Border>
         </StackPanel>
-
-
+        <StackPanel  Grid.Row="0" Grid.Column="1"  Grid.RowSpan="2"  Background="#EEF5F9" >
+            <WrapPanel Margin="10,0,10,0"  >
+            <ScrollViewer  VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" 
+                              HorizontalAlignment="Stretch" Margin="10,0,0,0" >
+                <TextBlock Margin="0,10" x:Name="txtInfo" Height="520" Grid.Column="1">
+                        <Run Text="Status Info: "/>
+                        <Run FontSize="20" Text="{Binding StatusInfo, UpdateSourceTrigger=PropertyChanged}"/>
+                        <LineBreak /> 
+                        <Run Text="통신 정보: " />
+                        <Run Text="{Binding Signal, UpdateSourceTrigger=PropertyChanged}"></Run>
+                        <LineBreak/>
+                        <Run Text="{Binding AllJointPoints, UpdateSourceTrigger=PropertyChanged}"/>
+                    </TextBlock>
+                </ScrollViewer>
+            
+             </WrapPanel>
+     </StackPanel>
 
     </Grid>
 </Window>
